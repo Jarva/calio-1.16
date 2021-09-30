@@ -8,12 +8,17 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.MessageType;
 import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagGroup;
 import net.minecraft.tag.TagManager;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Calio implements ModInitializer {
 
@@ -68,6 +73,51 @@ public class Calio implements ModInitializer {
 		return tagManagerGetter.get();
 	}
 
+	@Nullable
+	public static <T> TagGroup<T> getTagGroup(RegistryKey<? extends Registry<T>> registryKey) {
+		if (registryKey.equals(Registry.ITEM_KEY)) {
+			return (TagGroup<T>) Calio.getTagManager().getItems();
+		}
+		if (registryKey.equals(Registry.FLUID_KEY)) {
+			return (TagGroup<T>) Calio.getTagManager().getFluids();
+		}
+		if (registryKey.equals(Registry.BLOCK_KEY)) {
+			return (TagGroup<T>) Calio.getTagManager().getBlocks();
+		}
+		if (registryKey.equals(Registry.ENTITY_TYPE_KEY)) {
+			return (TagGroup<T>) Calio.getTagManager().getEntityTypes();
+		}
+		return null;
+	}
+
+	public static <T, E extends Exception> Identifier getTagId(RegistryKey<? extends Registry<T>> registryKey, Tag<T> tag, Supplier<E> exceptionSupplier) throws E {
+		TagGroup<T> tagGroup = Calio.getTagGroup(registryKey);
+		if (tagGroup == null) {
+			throw (E) exceptionSupplier.get();
+		} else {
+			Identifier identifier = tagGroup.getUncheckedTagId(tag);
+			if (identifier == null) {
+				throw (E) exceptionSupplier.get();
+			} else {
+				return identifier;
+			}
+		}
+	}
+
+	public static <T, E extends Exception> Tag<T> getTag(RegistryKey<? extends Registry<T>> registryKey, Identifier id, Function<Identifier, E> exceptionSupplier) throws E {
+		TagGroup<T> tagGroup = Calio.getTagGroup(registryKey);
+		if (tagGroup == null) {
+			throw (E) exceptionSupplier.apply(id);
+		} else {
+			Tag<T> tag = tagGroup.getTag(id);
+			if (tag == null) {
+				throw (E) exceptionSupplier.apply(id);
+			} else {
+				return tag;
+			}
+		}
+	}
+
 	public static <T> boolean areTagsEqual(RegistryKey<? extends Registry<T>> registryKey, Tag<T> tag1, Tag<T> tag2) {
 		if(tag1 == tag2) {
 			return true;
@@ -81,13 +131,13 @@ public class Calio implements ModInitializer {
 			if(tag1 instanceof Tag.Identified) {
 				id1 = ((Tag.Identified)tag1).getId();
 			} else {
-				id1 = tagManager.getTagId(registryKey, tag1, RuntimeException::new);
+				id1 = Calio.getTagId(registryKey, tag1, RuntimeException::new);
 			}
 			Identifier id2;
 			if(tag2 instanceof Tag.Identified) {
 				id2 = ((Tag.Identified)tag2).getId();
 			} else {
-				id2 = tagManager.getTagId(registryKey, tag2, RuntimeException::new);
+				id2 = Calio.getTagId(registryKey, tag2, RuntimeException::new);
 			}
 			return id1.equals(id2);
 		} catch (Exception e) {

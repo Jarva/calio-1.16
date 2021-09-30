@@ -15,7 +15,6 @@ import io.github.apace100.calio.mixin.DamageSourceAccessor;
 import io.github.apace100.calio.util.IdentifiedTag;
 import io.github.apace100.calio.util.StatusEffectChance;
 import net.minecraft.block.Block;
-import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityGroup;
 import net.minecraft.entity.EntityType;
@@ -29,7 +28,7 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.ParticleType;
@@ -45,7 +44,6 @@ import net.minecraft.util.*;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 
 import java.util.*;
 
@@ -164,7 +162,7 @@ public final class SerializableDataTypes {
             inst.set("unblockable", ds.isUnblockable());
             inst.set("bypasses_armor", ds.bypassesArmor());
             inst.set("out_of_world", ds.isOutOfWorld());
-            inst.set("magic", ds.isMagic());
+            inst.set("magic", ds.getMagic());
             inst.set("projectile", ds.isProjectile());
             inst.set("explosive", ds.isExplosive());
             return inst;
@@ -230,9 +228,11 @@ public final class SerializableDataTypes {
             }
             if(tagPresent) {
                 Tag<Item> tag = (Tag<Item>)dataInstance.get("tag");
-                return List.copyOf(tag.values());
+                List<Item> tags = new ArrayList<>();
+                Collections.copy(tag.values(), tags);
+                return tags;
             } else {
-                return List.of((Item)dataInstance.get("item"));
+                return Collections.singletonList((Item)dataInstance.get("item"));
             }
         }, (data, items) -> {
             SerializableData.Instance inst = data.new Instance();
@@ -240,7 +240,7 @@ public final class SerializableDataTypes {
                 inst.set("item", items.get(0));
             } else {
                 TagManager tagManager = Calio.getTagManager();
-                TagGroup<Item> tagGroup = tagManager.getOrCreateTagGroup(Registry.ITEM_KEY);
+                TagGroup<Item> tagGroup = tagManager.getItems();
                 Collection<Identifier> possibleTags = tagGroup.getTagsFor(items.get(0));
                 for(int i = 1; i < items.size() && possibleTags.size() > 1; i++) {
                     possibleTags.removeAll(tagGroup.getTagsFor(items.get(i)));
@@ -293,11 +293,11 @@ public final class SerializableDataTypes {
 
     public static final SerializableDataType<ParticleType<?>> PARTICLE_TYPE = SerializableDataType.registry(ClassUtil.castClass(ParticleType.class), Registry.PARTICLE_TYPE);
 
-    public static final SerializableDataType<NbtCompound> NBT = SerializableDataType.wrap(NbtCompound.class, SerializableDataTypes.STRING,
-        NbtCompound::toString,
+    public static final SerializableDataType<CompoundTag> NBT = SerializableDataType.wrap(CompoundTag.class, SerializableDataTypes.STRING,
+        CompoundTag::toString,
         (str) -> {
             try {
-                return new StringNbtReader(new StringReader(str)).parseCompound();
+                return new StringNbtReader(new StringReader(str)).parseCompoundTag();
             } catch (CommandSyntaxException e) {
                 throw new JsonSyntaxException("Could not parse NBT tag, exception: " + e.getMessage());
             }
@@ -311,7 +311,7 @@ public final class SerializableDataTypes {
         (data) ->  {
             ItemStack stack = new ItemStack((Item)data.get("item"), data.getInt("amount"));
             if(data.isPresent("tag")) {
-                stack.setTag((NbtCompound)data.get("tag"));
+                stack.setTag((CompoundTag)data.get("tag"));
             }
             return stack;
         },
@@ -333,7 +333,7 @@ public final class SerializableDataTypes {
     public static SerializableDataType<RegistryKey<World>> DIMENSION = SerializableDataType.wrap(
         ClassUtil.castClass(RegistryKey.class),
         SerializableDataTypes.IDENTIFIER,
-        RegistryKey::getValue, identifier -> RegistryKey.of(Registry.WORLD_KEY, identifier)
+        RegistryKey::getValue, identifier -> RegistryKey.of(Registry.DIMENSION, identifier)
     );
 
     public static final SerializableDataType<Recipe> RECIPE = new SerializableDataType<>(Recipe.class,
@@ -359,18 +359,7 @@ public final class SerializableDataTypes {
             return serializer.read(recipeId, json);
         });
 
-    public static final SerializableDataType<GameEvent> GAME_EVENT = SerializableDataType.registry(GameEvent.class, Registry.GAME_EVENT);
-
-    public static final SerializableDataType<List<GameEvent>> GAME_EVENTS =
-        SerializableDataType.list(GAME_EVENT);
-
-    public static final SerializableDataType<Tag<GameEvent>> GAME_EVENT_TAG = SerializableDataType.wrap(ClassUtil.castClass(Tag.class), SerializableDataTypes.IDENTIFIER,
-        tag -> Calio.getTagManager().getTagId(Registry.GAME_EVENT_KEY, tag, RuntimeException::new),
-        id -> new IdentifiedTag<>(Registry.GAME_EVENT_KEY, id));
-
     public static final SerializableDataType<Fluid> FLUID = SerializableDataType.registry(Fluid.class, Registry.FLUID);
-
-    public static final SerializableDataType<CameraSubmersionType> CAMERA_SUBMERSION_TYPE = SerializableDataType.enumValue(CameraSubmersionType.class);
 
     public static final SerializableDataType<Hand> HAND = SerializableDataType.enumValue(Hand.class);
 

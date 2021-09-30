@@ -12,6 +12,7 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.registry.Registry;
@@ -24,7 +25,7 @@ import java.util.function.Function;
 public class SerializationHelper {
 
     public static Tag<Fluid> getFluidTagFromId(Identifier id) {
-        return FluidTags.getTagGroup().getTag(id);
+        return Calio.getTagManager().getFluids().getTag(id);
     }
 
     public static Tag<Block> getBlockTagFromId(Identifier id) {

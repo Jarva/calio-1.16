@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
@@ -37,7 +38,8 @@ public class CalioClient implements ClientModInitializer {
                 boolean isChatPressed = InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), key.getCode());
                 if(isCtrlPressed && isChatPressed && !sharedStack) {
                     sharedStack = true;
-                    if (client.player.currentScreenHandler.getCursorStack().isEmpty() && focusedSlot != null && focusedSlot.hasStack()) {
+                    PlayerInventory playerInventory = client.player.inventory;
+                    if (playerInventory.getCursorStack().isEmpty() && focusedSlot != null && focusedSlot.hasStack()) {
                         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
                         SerializableDataTypes.ITEM_STACK.send(buf, focusedSlot.getStack());
                         ClientPlayNetworking.send(Calio.PACKET_SHARE_ITEM, buf);

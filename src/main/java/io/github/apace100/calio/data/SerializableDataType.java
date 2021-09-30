@@ -258,7 +258,7 @@ public class SerializableDataType<T> {
                 if(item instanceof Tag.Identified<T>) {
                     return ((Tag.Identified<T>)item).getId();
                 }
-                return Calio.getTagManager().getTagId(registryKey, item, () -> new JsonSyntaxException("Unknown tag"));
+                return Calio.getTagId(registryKey, item, () -> new JsonSyntaxException("Unknown tag"));
             },
             id -> new IdentifiedTag<>(registryKey, id));
     }

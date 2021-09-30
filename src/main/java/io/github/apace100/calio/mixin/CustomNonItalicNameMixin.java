@@ -4,7 +4,7 @@ import io.github.apace100.calio.Calio;
 import io.github.apace100.calio.NbtConstants;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.screen.AnvilScreenHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,7 +38,7 @@ public abstract class CustomNonItalicNameMixin {
     public abstract static class RemoveNonItalicOnRename {
         @Inject(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;setCustomName(Lnet/minecraft/text/Text;)Lnet/minecraft/item/ItemStack;"), locals = LocalCapture.CAPTURE_FAILHARD)
         private void removeNonItalicFlag(CallbackInfo ci, ItemStack itemStack, int i, int j, int k, ItemStack itemStack2) {
-            NbtCompound display = itemStack2.getSubTag("display");
+            CompoundTag display = itemStack2.getSubTag("display");
             if(display != null && display.contains(NbtConstants.NON_ITALIC_NAME)) {
                 display.remove(NbtConstants.NON_ITALIC_NAME);
             }

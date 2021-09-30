@@ -22,7 +22,7 @@ public class IdentifiedTag<T> implements Tag.Identified<T> {
 
     private void updateContainedTag() {
         try {
-            this.containedTag = Calio.getTagManager().getTag(registryKey, id, id -> new RuntimeException("Could not load tag: " + id.toString()));
+            this.containedTag = Calio.getTag(registryKey, id, id -> new RuntimeException("Could not load tag: " + id.toString()));
         } catch (RuntimeException e) {
             // Fail silently. This sometimes happens one frame at world load.
         }

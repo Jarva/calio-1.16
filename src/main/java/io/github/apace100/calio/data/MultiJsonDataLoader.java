@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.SinglePreparationResourceReloader;
+import net.minecraft.resource.SinglePreparationResourceReloadListener;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import net.minecraft.util.profiler.Profiler;
@@ -21,7 +21,7 @@ import java.util.*;
  * data pack. This allows overriding and merging several data files into one, similar to how tags work. There is no
  * guarantee on the order of the resulting list, so make sure to include some kind of "priority" system.
  */
-public abstract class MultiJsonDataLoader extends SinglePreparationResourceReloader<Map<Identifier, List<JsonElement>>> {
+public abstract class MultiJsonDataLoader extends SinglePreparationResourceReloadListener<Map<Identifier, List<JsonElement>>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int FILE_SUFFIX_LENGTH = ".json".length();
     private final Gson gson;
