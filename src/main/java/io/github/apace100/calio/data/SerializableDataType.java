@@ -255,7 +255,7 @@ public class SerializableDataType<T> {
     public static <T> SerializableDataType<Tag<T>> tag(RegistryKey<? extends Registry<T>> registryKey) {
         return SerializableDataType.wrap(ClassUtil.castClass(Tag.class), SerializableDataTypes.IDENTIFIER,
             item -> {
-                if(item instanceof Tag.Identified<T>) {
+                if(item instanceof Tag.Identified<?>) {
                     return ((Tag.Identified<T>)item).getId();
                 }
                 return Calio.getTagId(registryKey, item, () -> new JsonSyntaxException("Unknown tag"));
